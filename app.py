@@ -251,8 +251,9 @@ html_code = """
                         if (Math.abs(val) < threshold) return "";
                         const isLong = type === "L";
                         const badgeClass = isLong ? "badge-long" : "badge-short";
+                        const labelText = isLong ? "Positions Longs" : "Positions Shorts";
                         const sign = val > 0 ? "+" : "";
-                        return `<span class="badge ${badgeClass}">${type}: ${sign}${val}%</span>`;
+                        return `<span class="badge ${badgeClass}">${labelText}: ${sign}${val}%</span>`;
                     };
 
                     const ncBadges = [formatBadge(valNcL, "L"), formatBadge(valNcS, "S")].filter(Boolean).join(" ");
