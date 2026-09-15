@@ -1,16 +1,15 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
-import requests
-from io import StringIO
+import cot_reports as cot
 
-# Configuration de la page Streamlit
+# Configuration de la page
 st.set_page_config(page_title="COT Cockpit - Kosov", layout="wide")
 
 st.title("📊 Cockpit Macro — Rapport COT (CFTC)")
 st.caption("Données hebdomadaires de la CFTC actualisées pour l'analyse institutionnelle")
 
-# Menu latéral (Sidebar)
+# Menu latéral
 st.sidebar.header("Configuration")
 asset_choice = st.sidebar.selectbox(
     "Choisir un actif",
@@ -18,44 +17,69 @@ asset_choice = st.sidebar.selectbox(
 )
 
 @st.cache_data(ttl=86400)
-def get_cot_data():
-    # Récupération des données brutes CFTC (Financial Futures / Disaggregated)
-    url = "https://www.cftc.gov/files/dea/history/fut_fin_txt_2026.txt"
+def load_data():
     try:
-        response = requests.get(url, timeout=10)
-        if response.status_code == 200:
-            return response.text
-        return None
-    except Exception:
-        return None
+        # Récupération automatique du rapport de l'année en cours
+        df = cot.cot_year(year=2026, cot_report_type='traders_in_financial_futures_futures_only')
+        return df
+    except Exception as e:
+        # Fallback si le format financier varie
+        try:
+            df = cot.cot_year(year=2026, cot_report_type='legacy_futures_only')
+            return df
+        except Exception:
+            return None
 
-raw_data = get_cot_data()
+with st.spinner("Extraction et traitement des données CFTC..."):
+    df_cot = load_data()
 
-if raw_data:
+if df_cot is not None and not df_cot.empty:
     st.success("✅ Données CFTC synchronisées avec succès.")
     
-    # Structure de démonstration pour le Dashboard
-    col1, col2, col3 = st.columns(3)
-    col1.metric(label=f"Actif Sélectionné", value=asset_choice)
-    col2.metric(label="Statut Large Speculators", value="Net Long", delta="+12.4%")
-    col3.metric(label="Statut Commercials", value="Net Short", delta="-5.2%")
-
-    st.markdown("---")
-    st.subheader(f"📈 Analyse des Positions Nettes sur {asset_choice}")
-
-    # Exemple de graphique interactif Plotly
-    df_example = pd.DataFrame({
-        "Semaine": ["S1", "S2", "S3", "S4"],
-        "Large Specs Net": [15000, 18000, 22000, 24925],
-        "Commercials Net": [-12000, -15000, -19000, -24925]
-    })
-
-    fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df_example["Semaine"], y=df_example["Large Specs Net"], mode='lines+markers', name='Large Speculators (Net)', line=dict(color='green', width=3)))
-    fig.add_trace(go.Scatter(x=df_example["Semaine"], y=df_example["Commercials Net"], mode='lines+markers', name='Commercials (Net)', line=dict(color='red', width=3)))
-    fig.update_layout(template="plotly_dark", height=450, margin=dict(l=20, r=20, t=30, b=20))
+    # Filtrage sur l'actif sélectionné
+    df_asset = df_cot[df_cot['Market_and_Exchange_Names'].str.contains(asset_choice, case=False, na=False)]
     
-    st.plotly_chart(fig, use_container_width=True)
+    if not df_asset.empty:
+        # Tri chronologique
+        df_asset = df_asset.sort_values(by='As_of_Date_In_YYYY-MM-DD', ascending=True)
+        
+        # Récupération de la dernière ligne
+        latest = df_asset.iloc[-1]
+        date_str = str(latest['As_of_Date_In_YYYY-MM-DD'])[:10]
+        
+        st.info(f"Dernier rapport disponible du : **{date_str}**")
+        
+        # Calcul des positions nettes
+        if 'Lev_Money_Positions_Long_All' in df_asset.columns:
+            # Format Financial Futures (Leveraged / Asset Mgr)
+            df_asset['Leveraged_Net'] = df_asset['Lev_Money_Positions_Long_All'] - df_asset['Lev_Money_Positions_Short_All']
+            df_asset['AssetMgr_Net'] = df_asset['Asset_Mgr_Positions_Long_All'] - df_asset['Asset_Mgr_Positions_Short_All']
+            
+            col1, col2 = st.columns(2)
+            col1.metric("Leveraged Funds (Net)", f"{int(df_asset['Leveraged_Net'].iloc[-1]):,}")
+            col2.metric("Asset Managers (Net)", f"{int(df_asset['AssetMgr_Net'].iloc[-1]):,}")
+            
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=df_asset['As_of_Date_In_YYYY-MM-DD'], y=df_asset['Leveraged_Net'], name='Leveraged Funds (Net)', line=dict(color='orange', width=2)))
+            fig.add_trace(go.Scatter(x=df_asset['As_of_Date_In_YYYY-MM-DD'], y=df_asset['AssetMgr_Net'], name='Asset Managers (Net)', line=dict(color='cyan', width=2)))
+            fig.update_layout(template="plotly_dark", height=500, title=f"Évolution des positions sur {asset_choice}")
+            st.plotly_chart(fig, use_container_width=True)
 
+        else:
+            # Format Legacy (Non-Commercials / Commercials)
+            df_asset['NonComm_Net'] = df_asset['NonComm_Positions_Long_All'] - df_asset['NonComm_Positions_Short_All']
+            df_asset['Comm_Net'] = df_asset['Comm_Positions_Long_All'] - df_asset['Comm_Positions_Short_All']
+            
+            col1, col2 = st.columns(2)
+            col1.metric("Large Speculators / NonComm (Net)", f"{int(df_asset['NonComm_Net'].iloc[-1]):,}")
+            col2.metric("Commercials (Net)", f"{int(df_asset['Comm_Net'].iloc[-1]):,}")
+            
+            fig = go.Figure()
+            fig.add_trace(go.Scatter(x=df_asset['As_of_Date_In_YYYY-MM-DD'], y=df_asset['NonComm_Net'], name='Non-Commercials (Net)', line=dict(color='green', width=2)))
+            fig.add_trace(go.Scatter(x=df_asset['As_of_Date_In_YYYY-MM-DD'], y=df_asset['Comm_Net'], name='Commercials (Net)', line=dict(color='red', width=2)))
+            fig.update_layout(template="plotly_dark", height=500, title=f"Évolution des positions sur {asset_choice}")
+            st.plotly_chart(fig, use_container_width=True)
+    else:
+        st.warning(f"Aucune donnée trouvée pour {asset_choice}. Essaie un autre actif.")
 else:
-    st.warning("⚠️ Chargement des données brutes en cours ou serveur CFTC momentanément indisponible.")
+    st.error("Impossible de récupérer les rapports. Le serveur de la CFTC est en maintenance.")
