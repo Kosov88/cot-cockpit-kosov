@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
-import cot_reports as cot
+import requests
 
 # Configuration de la page
 st.set_page_config(page_title="COT Cockpit - Kosov", layout="wide")
@@ -9,77 +9,105 @@ st.set_page_config(page_title="COT Cockpit - Kosov", layout="wide")
 st.title("📊 Cockpit Macro — Rapport COT (CFTC)")
 st.caption("Données hebdomadaires de la CFTC actualisées pour l'analyse institutionnelle")
 
-# Menu latéral
+# Dictionnaire de correspondance des actifs avec l'API CFTC (Code CFTC & Noms)
+ASSETS = {
+    "EURO FX": "EURO FX - CHICAGO MERCANTILE EXCHANGE",
+    "JAPANESE YEN": "JAPANESE YEN - CHICAGO MERCANTILE EXCHANGE",
+    "BRITISH POUND": "BRITISH POUND - CHICAGO MERCANTILE EXCHANGE",
+    "GOLD": "GOLD - COMMODITY EXCHANGE INC.",
+    "CORN": "CORN - CHICAGO BOARD OF TRADE",
+    "CRUDE OIL": "CRUDE OIL LIGHT SWEET - NEW YORK MERCANTILE EXCHANGE"
+}
+
 st.sidebar.header("Configuration")
-asset_choice = st.sidebar.selectbox(
-    "Choisir un actif",
-    ["EURO FX", "JAPANESE YEN", "BRITISH POUND", "GOLD", "CORN", "CRUDE OIL"]
-)
+asset_choice = st.sidebar.selectbox("Choisir un actif", list(ASSETS.keys()))
 
-@st.cache_data(ttl=86400)
-def load_data():
+@st.cache_data(ttl=3600)
+def fetch_cot_data_api(market_name):
+    # API publique Socrata de la CFTC (Futures Only Legacy / Disaggregated)
+    url = "https://publicreporting.cftc.gov/resource/6dca-aqww.json"
+    
+    # Paramètres de la requête API : On filtre par marché et on trie par date
+    params = {
+        "$where": f"market_and_exchange_names like '%{market_name}%'",
+        "$order": "report_date_as_yyyy_mm_dd DESC",
+        "$limit": 100
+    }
+    
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+    }
+    
     try:
-        # Récupération automatique du rapport de l'année en cours
-        df = cot.cot_year(year=2026, cot_report_type='traders_in_financial_futures_futures_only')
-        return df
+        res = requests.get(url, params=params, headers=headers, timeout=15)
+        if res.status_code == 200:
+            data = res.json()
+            if data:
+                df = pd.DataFrame(data)
+                return df
     except Exception as e:
-        # Fallback si le format financier varie
-        try:
-            df = cot.cot_year(year=2026, cot_report_type='legacy_futures_only')
-            return df
-        except Exception:
-            return None
+        return None
+    return None
 
-with st.spinner("Extraction et traitement des données CFTC..."):
-    df_cot = load_data()
+with st.spinner(f"Récupération des données API pour {asset_choice}..."):
+    cftc_name = ASSETS[asset_choice]
+    df_asset = fetch_cot_data_api(asset_choice)
 
-if df_cot is not None and not df_cot.empty:
-    st.success("✅ Données CFTC synchronisées avec succès.")
+if df_asset is not None and not df_asset.empty:
+    st.success("✅ Données CFTC récupérées via l'API avec succès.")
     
-    # Filtrage sur l'actif sélectionné
-    df_asset = df_cot[df_cot['Market_and_Exchange_Names'].str.contains(asset_choice, case=False, na=False)]
+    # Tri chronologique (du plus ancien au plus récent pour le graphique)
+    df_asset = df_asset.sort_values(by='report_date_as_yyyy_mm_dd', ascending=True)
     
-    if not df_asset.empty:
-        # Tri chronologique
-        df_asset = df_asset.sort_values(by='As_of_Date_In_YYYY-MM-DD', ascending=True)
-        
-        # Récupération de la dernière ligne
-        latest = df_asset.iloc[-1]
-        date_str = str(latest['As_of_Date_In_YYYY-MM-DD'])[:10]
-        
-        st.info(f"Dernier rapport disponible du : **{date_str}**")
-        
-        # Calcul des positions nettes
-        if 'Lev_Money_Positions_Long_All' in df_asset.columns:
-            # Format Financial Futures (Leveraged / Asset Mgr)
-            df_asset['Leveraged_Net'] = df_asset['Lev_Money_Positions_Long_All'] - df_asset['Lev_Money_Positions_Short_All']
-            df_asset['AssetMgr_Net'] = df_asset['Asset_Mgr_Positions_Long_All'] - df_asset['Asset_Mgr_Positions_Short_All']
+    # Conversion des colonnes numériques
+    num_cols = [
+        'noncomm_positions_long_all', 'noncomm_positions_short_all',
+        'comm_positions_long_all', 'comm_positions_short_all'
+    ]
+    for col in num_cols:
+        if col in df_asset.columns:
+            df_asset[col] = pd.to_numeric(df_asset[col], errors='coerce').fillna(0)
             
-            col1, col2 = st.columns(2)
-            col1.metric("Leveraged Funds (Net)", f"{int(df_asset['Leveraged_Net'].iloc[-1]):,}")
-            col2.metric("Asset Managers (Net)", f"{int(df_asset['AssetMgr_Net'].iloc[-1]):,}")
-            
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(x=df_asset['As_of_Date_In_YYYY-MM-DD'], y=df_asset['Leveraged_Net'], name='Leveraged Funds (Net)', line=dict(color='orange', width=2)))
-            fig.add_trace(go.Scatter(x=df_asset['As_of_Date_In_YYYY-MM-DD'], y=df_asset['AssetMgr_Net'], name='Asset Managers (Net)', line=dict(color='cyan', width=2)))
-            fig.update_layout(template="plotly_dark", height=500, title=f"Évolution des positions sur {asset_choice}")
-            st.plotly_chart(fig, use_container_width=True)
+    # Calcul des positions nettes
+    df_asset['NonComm_Net'] = df_asset['noncomm_positions_long_all'] - df_asset['noncomm_positions_short_all']
+    df_asset['Comm_Net'] = df_asset['comm_positions_long_all'] - df_asset['comm_positions_short_all']
+    
+    latest_date = df_asset['report_date_as_yyyy_mm_dd'].iloc[-1][:10]
+    st.info(f"Dernier rapport disponible : **{latest_date}**")
+    
+    # Métriques principales
+    col1, col2 = st.columns(2)
+    last_noncomm = int(df_asset['NonComm_Net'].iloc[-1])
+    last_comm = int(df_asset['Comm_Net'].iloc[-1])
+    
+    col1.metric("Large Speculators / Non-Comm (Net)", f"{last_noncomm:,}")
+    col2.metric("Commercials / Hedgers (Net)", f"{last_comm:,}")
+    
+    # Graphique Plotly
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=df_asset['report_date_as_yyyy_mm_dd'], 
+        y=df_asset['NonComm_Net'], 
+        name='Large Speculators (Net)', 
+        line=dict(color='limegreen', width=2.5)
+    ))
+    fig.add_trace(go.Scatter(
+        x=df_asset['report_date_as_yyyy_mm_dd'], 
+        y=df_asset['Comm_Net'], 
+        name='Commercials (Net)', 
+        line=dict(color='crimson', width=2.5)
+    ))
+    
+    fig.update_layout(
+        template="plotly_dark",
+        height=500,
+        title=f"Évolution des positions nettes — {asset_choice}",
+        xaxis_title="Date",
+        yaxis_title="Nombre de contrats (Net)"
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
 
-        else:
-            # Format Legacy (Non-Commercials / Commercials)
-            df_asset['NonComm_Net'] = df_asset['NonComm_Positions_Long_All'] - df_asset['NonComm_Positions_Short_All']
-            df_asset['Comm_Net'] = df_asset['Comm_Positions_Long_All'] - df_asset['Comm_Positions_Short_All']
-            
-            col1, col2 = st.columns(2)
-            col1.metric("Large Speculators / NonComm (Net)", f"{int(df_asset['NonComm_Net'].iloc[-1]):,}")
-            col2.metric("Commercials (Net)", f"{int(df_asset['Comm_Net'].iloc[-1]):,}")
-            
-            fig = go.Figure()
-            fig.add_trace(go.Scatter(x=df_asset['As_of_Date_In_YYYY-MM-DD'], y=df_asset['NonComm_Net'], name='Non-Commercials (Net)', line=dict(color='green', width=2)))
-            fig.add_trace(go.Scatter(x=df_asset['As_of_Date_In_YYYY-MM-DD'], y=df_asset['Comm_Net'], name='Commercials (Net)', line=dict(color='red', width=2)))
-            fig.update_layout(template="plotly_dark", height=500, title=f"Évolution des positions sur {asset_choice}")
-            st.plotly_chart(fig, use_container_width=True)
-    else:
-        st.warning(f"Aucune donnée trouvée pour {asset_choice}. Essaie un autre actif.")
 else:
-    st.error("Impossible de récupérer les rapports. Le serveur de la CFTC est en maintenance.")
+    st.error("⚠️ Impossible de contacter l'API de la CFTC ou aucun résultat trouvé pour cet actif.")
+    
