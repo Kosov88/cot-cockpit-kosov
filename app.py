@@ -72,7 +72,7 @@ html_code = """
 
 <!-- RÉSUMÉ EN LISTE : 3 COLONNES -->
 <div class="alerts-container">
-    <div class="alerts-title">⚠️ Mouvements Inhabituels (Changements Longs/Shorts ≥ ±15%)</div>
+    <div class="alerts-title">⚠️ Mouvements Inhabituels (Changements Longs/Shorts ≥ ±20%)</div>
     <div class="alerts-table-header">
         <div>Actif</div>
         <div style="color:#58a6ff;">Non-Commercial (Specs)</div>
@@ -238,7 +238,7 @@ html_code = """
         const rows = document.querySelectorAll("#cotTable tbody tr");
         const alertsList = document.getElementById("alertsList");
         let alertsCount = 0;
-        const THRESHOLD = 15;
+        const THRESHOLD = 20;
 
         rows.forEach(row => {
             if (row.classList.contains("category-header")) return;
@@ -287,7 +287,7 @@ html_code = """
         });
 
         if (alertsCount === 0) {
-            alertsList.innerHTML = "<div style='color: #8b949e; font-size: 12px; padding: 10px; background-color: #0d1117; text-align: center;'>Aucun mouvement supérieur à ±15% cette semaine.</div>";
+            alertsList.innerHTML = "<div style='color: #8b949e; font-size: 12px; padding: 10px; background-color: #0d1117; text-align: center;'>Aucun mouvement supérieur à ±20% cette semaine.</div>";
         }
     });
 </script>
