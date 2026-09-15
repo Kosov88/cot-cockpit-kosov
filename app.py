@@ -36,15 +36,18 @@ html_code = """
         .title span { color: #58a6ff; }
         .date { font-size: 14px; color: #8b949e; }
         
-        /* Styles pour le bloc de résumé */
+        /* Bloc résumé en liste verticale */
         .alerts-container { background-color: #161b22; border-radius: 6px; border: 1px solid #30363d; padding: 15px; margin-bottom: 15px; }
-        .alerts-title { font-size: 14px; font-weight: bold; color: #f2994a; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
-        .alerts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
-        .alert-card { background-color: #0d1117; border: 1px solid #30363d; border-radius: 4px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; }
-        .alert-asset { font-weight: bold; color: #f0f6fc; font-size: 13px; }
-        .alert-badge { font-weight: bold; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
-        .badge-long { background-color: rgba(63, 185, 80, 0.15); color: #3fb950; border: 1px solid #238636; }
-        .badge-short { background-color: rgba(248, 81, 73, 0.15); color: #f85149; border: 1px solid #da3633; }
+        .alerts-title { font-size: 14px; font-weight: bold; color: #f2994a; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+        
+        .alerts-list { display: flex; flex-direction: column; gap: 8px; }
+        .alert-item { background-color: #0d1117; border: 1px solid #30363d; border-radius: 4px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+        .alert-asset { font-weight: bold; color: #f0f6fc; }
+        .alert-details { display: flex; gap: 10px; align-items: center; }
+        
+        .badge { font-weight: bold; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+        .badge-up { background-color: rgba(63, 185, 80, 0.15); color: #3fb950; border: 1px solid #238636; }
+        .badge-down { background-color: rgba(248, 81, 73, 0.15); color: #f85149; border: 1px solid #da3633; }
 
         .table-container { overflow-x: auto; background-color: #161b22; border-radius: 6px; border: 1px solid #30363d; }
         table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: right; }
@@ -55,10 +58,6 @@ html_code = """
         td.asset-name { text-align: left; font-weight: bold; color: #f0f6fc; }
         .pos { color: #3fb950; }
         .neg { color: #f85149; }
-        .bar-container { display: flex; align-items: center; gap: 6px; justify-content: flex-end; }
-        .bar { height: 8px; border-radius: 4px; display: flex; overflow: hidden; width: 70px; background-color: #21262d; }
-        .bar-long { background-color: #238636; }
-        .bar-short { background-color: #da3633; }
     </style>
 </head>
 <body>
@@ -68,11 +67,11 @@ html_code = """
     <div class="date">Sep 15, 2026</div>
 </div>
 
-<!-- SECTION MOUVEMENTS INHABITUELS -->
+<!-- RÉSUMÉ EN LISTE DES MOUVEMENTS INHABITUELS -->
 <div class="alerts-container">
-    <div class="alerts-title">⚠️ Mouvements Inhabituels (Ajustements > 20%)</div>
-    <div class="alerts-grid" id="alertsGrid">
-        <!-- Les cartes seront générées dynamiquement par JavaScript -->
+    <div class="alerts-title">⚠️ Mouvements Inhabituels (Change in Longs/Shorts ≥ ±20%)</div>
+    <div class="alerts-list" id="alertsList">
+        <!-- Généré dynamiquement en liste -->
     </div>
 </div>
 
@@ -81,69 +80,68 @@ html_code = """
         <thead>
             <tr>
                 <th style="text-align:left;">CONTRACTS</th>
-                <th colspan="4" style="text-align:center; color:#58a6ff;">NON-COMMERCIAL (Large Specs)</th>
-                <th colspan="4" style="text-align:center; color:#3fb950;">COMMERCIAL (Hedgers)</th>
-                <th colspan="4" style="text-align:center; color:#f85149;">NON-REPORTABLE (Small Specs)</th>
+                <th colspan="5" style="text-align:center; color:#58a6ff;">NON-COMMERCIAL (Large Specs)</th>
                 <th>OPEN INTEREST</th>
             </tr>
             <tr>
                 <th style="text-align:left;">Asset</th>
-                <th>Net Pos</th><th>Long</th><th>Short</th><th>L vs S</th>
-                <th>Net Pos</th><th>Long</th><th>Short</th><th>L vs S</th>
-                <th>Net Pos</th><th>Long</th><th>Short</th><th>L vs S</th>
+                <th>Net Pos</th>
+                <th>Long</th>
+                <th>Δ Long (%)</th>
+                <th>Short</th>
+                <th>Δ Short (%)</th>
                 <th>Total</th>
             </tr>
         </thead>
         <tbody>
+            <tr class="category-header"><td colspan="7">▼ DEVISES</td></tr>
+            <tr>
+                <td class="asset-name">US Dollar Index (DXY)</td>
+                <td class="pos">+17,604</td>
+                <td>28,407</td>
+                <td class="pos" data-change="long">+24%</td>
+                <td>10,803</td>
+                <td class="neg" data-change="short">-5%</td>
+                <td>57,858</td>
+            </tr>
+            <tr>
+                <td class="asset-name">EUR</td>
+                <td class="neg">-42,616</td>
+                <td>198,509</td>
+                <td class="neg" data-change="long">-3%</td>
+                <td>241,125</td>
+                <td class="pos" data-change="short">+28%</td>
+                <td>942,464</td>
+            </tr>
+            <tr>
+                <td class="asset-name">GBP</td>
+                <td class="neg">-58,836</td>
+                <td>73,520</td>
+                <td class="neg" data-change="long">-22%</td>
+                <td>132,356</td>
+                <td class="pos" data-change="short">+12%</td>
+                <td>318,608</td>
+            </tr>
 
-            <!-- DEVISES -->
-            <tr class="category-header"><td colspan="14">▼ DEVISES</td></tr>
-            <tr><td class="asset-name">US Dollar Index (DXY)</td><td class="pos">+17,604</td><td>28,407</td><td>10,803</td><td><div class="bar-container"><span>72%</span><div class="bar"><div class="bar-long" style="width:72%"></div><div class="bar-short" style="width:28%"></div></div></div></td><td class="neg">-19,188</td><td>18,620</td><td>37,808</td><td><div class="bar-container"><span>33%</span><div class="bar"><div class="bar-long" style="width:33%"></div><div class="bar-short" style="width:67%"></div></div></div></td><td class="pos">+1,584</td><td>3,246</td><td>1,662</td><td><div class="bar-container"><span>66%</span><div class="bar"><div class="bar-long" style="width:66%"></div><div class="bar-short" style="width:34%"></div></div></div></td><td>57,858</td></tr>
-            <tr><td class="asset-name">EUR</td><td class="neg">-42,616</td><td>198,509</td><td>241,125</td><td><div class="bar-container"><span>45%</span><div class="bar"><div class="bar-long" style="width:45%"></div><div class="bar-short" style="width:55%"></div></div></div></td><td class="pos">+6,730</td><td>593,162</td><td>586,432</td><td><div class="bar-container"><span>50%</span><div class="bar"><div class="bar-long" style="width:50%"></div><div class="bar-short" style="width:50%"></div></div></div></td><td class="pos">+35,886</td><td>92,781</td><td>56,895</td><td><div class="bar-container"><span>62%</span><div class="bar"><div class="bar-long" style="width:62%"></div><div class="bar-short" style="width:38%"></div></div></div></td><td>942,464</td></tr>
-            <tr><td class="asset-name">GBP</td><td class="neg">-58,836</td><td>73,520</td><td>132,356</td><td><div class="bar-container"><span>36%</span><div class="bar"><div class="bar-long" style="width:36%"></div><div class="bar-short" style="width:64%"></div></div></div></td><td class="pos">+57,102</td><td>205,647</td><td>148,545</td><td><div class="bar-container"><span>58%</span><div class="bar"><div class="bar-long" style="width:58%"></div><div class="bar-short" style="width:42%"></div></div></div></td><td class="pos">+1,734</td><td>31,683</td><td>29,949</td><td><div class="bar-container"><span>51%</span><div class="bar"><div class="bar-long" style="width:51%"></div><div class="bar-short" style="width:49%"></div></div></div></td><td>318,608</td></tr>
-            <tr><td class="asset-name">YEN</td><td class="pos">+10,796</td><td>178,791</td><td>167,995</td><td><div class="bar-container"><span>52%</span><div class="bar"><div class="bar-long" style="width:52%"></div><div class="bar-short" style="width:48%"></div></div></div></td><td class="neg">-14,041</td><td>249,469</td><td>263,510</td><td><div class="bar-container"><span>49%</span><div class="bar"><div class="bar-long" style="width:49%"></div><div class="bar-short" style="width:51%"></div></div></div></td><td class="pos">+3,245</td><td>42,640</td><td>39,395</td><td><div class="bar-container"><span>52%</span><div class="bar"><div class="bar-long" style="width:52%"></div><div class="bar-short" style="width:48%"></div></div></div></td><td>499,635</td></tr>
-            <tr><td class="asset-name">CAD</td><td class="neg">-70,499</td><td>54,444</td><td>124,943</td><td><div class="bar-container"><span>30%</span><div class="bar"><div class="bar-long" style="width:30%"></div><div class="bar-short" style="width:70%"></div></div></div></td><td class="pos">+74,429</td><td>244,052</td><td>169,623</td><td><div class="bar-container"><span>59%</span><div class="bar"><div class="bar-long" style="width:59%"></div><div class="bar-short" style="width:41%"></div></div></div></td><td class="neg">-3,930</td><td>29,559</td><td>33,489</td><td><div class="bar-container"><span>47%</span><div class="bar"><div class="bar-long" style="width:47%"></div><div class="bar-short" style="width:53%"></div></div></div></td><td>334,861</td></tr>
-            <tr><td class="asset-name">AUD</td><td class="neg">-34,870</td><td>120,532</td><td>155,402</td><td><div class="bar-container"><span>44%</span><div class="bar"><div class="bar-long" style="width:44%"></div><div class="bar-short" style="width:56%"></div></div></div></td><td class="pos">+15,684</td><td>271,564</td><td>255,880</td><td><div class="bar-container"><span>51%</span><div class="bar"><div class="bar-long" style="width:51%"></div><div class="bar-short" style="width:49%"></div></div></div></td><td class="pos">+19,186</td><td>37,079</td><td>17,893</td><td><div class="bar-container"><span>67%</span><div class="bar"><div class="bar-long" style="width:67%"></div><div class="bar-short" style="width:33%"></div></div></div></td><td>455,468</td></tr>
-            <tr><td class="asset-name">CHF</td><td class="neg">-29,985</td><td>17,273</td><td>47,258</td><td><div class="bar-container"><span>27%</span><div class="bar"><div class="bar-long" style="width:27%"></div><div class="bar-short" style="width:73%"></div></div></div></td><td class="pos">+41,504</td><td>112,612</td><td>71,108</td><td><div class="bar-container"><span>61%</span><div class="bar"><div class="bar-long" style="width:61%"></div><div class="bar-short" style="width:39%"></div></div></div></td><td class="neg">-11,519</td><td>12,822</td><td>24,341</td><td><div class="bar-container"><span>34%</span><div class="bar"><div class="bar-long" style="width:34%"></div><div class="bar-short" style="width:66%"></div></div></div></td><td>153,683</td></tr>
-            <tr><td class="asset-name">NZD</td><td class="pos">+6,232</td><td>26,110</td><td>19,878</td><td><div class="bar-container"><span>57%</span><div class="bar"><div class="bar-long" style="width:57%"></div><div class="bar-short" style="width:43%"></div></div></div></td><td class="neg">-5,635</td><td>87,479</td><td>93,114</td><td><div class="bar-container"><span>48%</span><div class="bar"><div class="bar-long" style="width:48%"></div><div class="bar-short" style="width:52%"></div></div></div></td><td class="neg">-597</td><td>4,520</td><td>5,117</td><td><div class="bar-container"><span>47%</span><div class="bar"><div class="bar-long" style="width:47%"></div><div class="bar-short" style="width:53%"></div></div></div></td><td>125,978</td></tr>
-
-            <!-- INDICES -->
-            <tr class="category-header"><td colspan="14">▼ INDICES</td></tr>
-            <tr><td class="asset-name">NASDAQ (E-Mini)</td><td class="pos">+12,410</td><td>85,120</td><td>72,710</td><td><div class="bar-container"><span>54%</span><div class="bar"><div class="bar-long" style="width:54%"></div><div class="bar-short" style="width:46%"></div></div></div></td><td class="neg">-18,200</td><td>120,400</td><td>138,600</td><td><div class="bar-container"><span>46%</span><div class="bar"><div class="bar-long" style="width:46%"></div><div class="bar-short" style="width:54%"></div></div></div></td><td class="pos">+5,790</td><td>22,100</td><td>16,310</td><td><div class="bar-container"><span>58%</span><div class="bar"><div class="bar-long" style="width:58%"></div><div class="bar-short" style="width:42%"></div></div></div></td><td>310,450</td></tr>
-            <tr><td class="asset-name">SP500 (E-Mini)</td><td class="neg">-85,200</td><td>410,000</td><td>495,200</td><td><div class="bar-container"><span>45%</span><div class="bar"><div class="bar-long" style="width:45%"></div><div class="bar-short" style="width:55%"></div></div></div></td><td class="pos">+110,400</td><td>1,200,000</td><td>1,089,600</td><td><div class="bar-container"><span>52%</span><div class="bar"><div class="bar-long" style="width:52%"></div><div class="bar-short" style="width:48%"></div></div></div></td><td class="neg">-25,200</td><td>150,000</td><td>175,200</td><td><div class="bar-container"><span>46%</span><div class="bar"><div class="bar-long" style="width:46%"></div><div class="bar-short" style="width:54%"></div></div></div></td><td>2,450,000</td></tr>
-            <tr><td class="asset-name">DOW JONES (E-Mini)</td><td class="pos">+4,150</td><td>32,100</td><td>27,950</td><td><div class="bar-container"><span>53%</span><div class="bar"><div class="bar-long" style="width:53%"></div><div class="bar-short" style="width:47%"></div></div></div></td><td class="neg">-6,200</td><td>65,400</td><td>71,600</td><td><div class="bar-container"><span>48%</span><div class="bar"><div class="bar-long" style="width:48%"></div><div class="bar-short" style="width:52%"></div></div></div></td><td class="pos">+2,050</td><td>11,200</td><td>9,150</td><td><div class="bar-container"><span>55%</span><div class="bar"><div class="bar-long" style="width:55%"></div><div class="bar-short" style="width:45%"></div></div></div></td><td>142,100</td></tr>
-            <tr><td class="asset-name">RUSSELL 2000</td><td class="neg">-15,400</td><td>42,100</td><td>57,500</td><td><div class="bar-container"><span>42%</span><div class="bar"><div class="bar-long" style="width:42%"></div><div class="bar-short" style="width:58%"></div></div></div></td><td class="pos">+18,100</td><td>145,000</td><td>126,900</td><td><div class="bar-container"><span>53%</span><div class="bar"><div class="bar-long" style="width:53%"></div><div class="bar-short" style="width:47%"></div></div></div></td><td class="neg">-2,700</td><td>18,400</td><td>21,100</td><td><div class="bar-container"><span>47%</span><div class="bar"><div class="bar-long" style="width:47%"></div><div class="bar-short" style="width:53%"></div></div></div></td><td>265,000</td></tr>
-            <tr><td class="asset-name">NIKKEI 225 (CME)</td><td class="pos">+8,320</td><td>34,150</td><td>25,830</td><td><div class="bar-container"><span>57%</span><div class="bar"><div class="bar-long" style="width:57%"></div><div class="bar-short" style="width:43%"></div></div></div></td><td class="neg">-9,410</td><td>18,220</td><td>27,630</td><td><div class="bar-container"><span>40%</span><div class="bar"><div class="bar-long" style="width:40%"></div><div class="bar-short" style="width:60%"></div></div></div></td><td class="pos">+1,090</td><td>5,140</td><td>4,050</td><td><div class="bar-container"><span>56%</span><div class="bar"><div class="bar-long" style="width:56%"></div><div class="bar-short" style="width:44%"></div></div></div></td><td>89,450</td></tr>
-
-            <!-- CRYPTO -->
-            <tr class="category-header"><td colspan="14">▼ CRYPTO</td></tr>
-            <tr><td class="asset-name">BTC (Bitcoin)</td><td class="pos">+1,524</td><td>17,600</td><td>16,076</td><td><div class="bar-container"><span>52%</span><div class="bar"><div class="bar-long" style="width:52%"></div><div class="bar-short" style="width:48%"></div></div></div></td><td class="neg">-2,061</td><td>64</td><td>2,125</td><td><div class="bar-container"><span>3%</span><div class="bar"><div class="bar-long" style="width:3%"></div><div class="bar-short" style="width:97%"></div></div></div></td><td class="pos">+537</td><td>1,273</td><td>736</td><td><div class="bar-container"><span>63%</span><div class="bar"><div class="bar-long" style="width:63%"></div><div class="bar-short" style="width:37%"></div></div></div></td><td>21,083</td></tr>
-            <tr><td class="asset-name">ETH (Ethereum)</td><td class="neg">-3,103,337</td><td>1,262,856</td><td>4,366,193</td><td><div class="bar-container"><span>22%</span><div class="bar"><div class="bar-long" style="width:22%"></div><div class="bar-short" style="width:78%"></div></div></div></td><td class="pos">+3,101,838</td><td>9,345,044</td><td>6,243,206</td><td><div class="bar-container"><span>60%</span><div class="bar"><div class="bar-long" style="width:60%"></div><div class="bar-short" style="width:40%"></div></div></div></td><td class="pos">+1,499</td><td>78,805</td><td>77,306</td><td><div class="bar-container"><span>50%</span><div class="bar"><div class="bar-long" style="width:50%"></div><div class="bar-short" style="width:50%"></div></div></div></td><td>13,294,407</td></tr>
-
-            <!-- MÉTAUX -->
-            <tr class="category-header"><td colspan="14">▼ MÉTAUX</td></tr>
-            <tr><td class="asset-name">OR (Gold)</td><td class="pos">+245,120</td><td>310,400</td><td>65,280</td><td><div class="bar-container"><span>83%</span><div class="bar"><div class="bar-long" style="width:83%"></div><div class="bar-short" style="width:17%"></div></div></div></td><td class="neg">-280,100</td><td>82,100</td><td>362,200</td><td><div class="bar-container"><span>18%</span><div class="bar"><div class="bar-long" style="width:18%"></div><div class="bar-short" style="width:82%"></div></div></div></td><td class="pos">+34,980</td><td>52,100</td><td>17,120</td><td><div class="bar-container"><span>75%</span><div class="bar"><div class="bar-long" style="width:75%"></div><div class="bar-short" style="width:25%"></div></div></div></td><td>512,300</td></tr>
-            <tr><td class="asset-name">ARGENT (Silver)</td><td class="pos">+42,100</td><td>68,200</td><td>26,100</td><td><div class="bar-container"><span>72%</span><div class="bar"><div class="bar-long" style="width:72%"></div><div class="bar-short" style="width:28%"></div></div></div></td><td class="neg">-51,300</td><td>22,400</td><td>73,700</td><td><div class="bar-container"><span>23%</span><div class="bar"><div class="bar-long" style="width:23%"></div><div class="bar-short" style="width:77%"></div></div></div></td><td class="pos">+9,200</td><td>16,100</td><td>6,900</td><td><div class="bar-container"><span>70%</span><div class="bar"><div class="bar-long" style="width:70%"></div><div class="bar-short" style="width:30%"></div></div></div></td><td>145,200</td></tr>
-            <tr><td class="asset-name">CUIVRE (Copper)</td><td class="pos">+18,400</td><td>55,100</td><td>36,700</td><td><div class="bar-container"><span>60%</span><div class="bar"><div class="bar-long" style="width:60%"></div><div class="bar-short" style="width:40%"></div></div></div></td><td class="neg">-22,100</td><td>41,200</td><td>63,300</td><td><div class="bar-container"><span>39%</span><div class="bar"><div class="bar-long" style="width:39%"></div><div class="bar-short" style="width:61%"></div></div></div></td><td class="pos">+3,700</td><td>12,400</td><td>8,700</td><td><div class="bar-container"><span>59%</span><div class="bar"><div class="bar-long" style="width:59%"></div><div class="bar-short" style="width:41%"></div></div></div></td><td>218,900</td></tr>
-            <tr><td class="asset-name">PLATINE (Platinum)</td><td class="pos">+12,100</td><td>28,400</td><td>16,300</td><td><div class="bar-container"><span>63%</span><div class="bar"><div class="bar-long" style="width:63%"></div><div class="bar-short" style="width:37%"></div></div></div></td><td class="neg">-15,200</td><td>18,100</td><td>33,300</td><td><div class="bar-container"><span>35%</span><div class="bar"><div class="bar-long" style="width:35%"></div><div class="bar-short" style="width:65%"></div></div></div></td><td class="pos">+3,100</td><td>6,800</td><td>3,700</td><td><div class="bar-container"><span>65%</span><div class="bar"><div class="bar-long" style="width:65%"></div><div class="bar-short" style="width:35%"></div></div></div></td><td>78,400</td></tr>
-            <tr><td class="asset-name">PALLADIUM</td><td class="neg">-4,200</td><td>6,100</td><td>10,300</td><td><div class="bar-container"><span>37%</span><div class="bar"><div class="bar-long" style="width:37%"></div><div class="bar-short" style="width:63%"></div></div></div></td><td class="pos">+5,100</td><td>14,200</td><td>9,100</td><td><div class="bar-container"><span>61%</span><div class="bar"><div class="bar-long" style="width:61%"></div><div class="bar-short" style="width:39%"></div></div></div></td><td class="neg">-900</td><td>2,100</td><td>3,000</td><td><div class="bar-container"><span>41%</span><div class="bar"><div class="bar-long" style="width:41%"></div><div class="bar-short" style="width:59%"></div></div></div></td><td>22,100</td></tr>
-
-            <!-- ENERGIE -->
-            <tr class="category-header"><td colspan="14">▼ ÉNERGIE</td></tr>
-            <tr><td class="asset-name">WTI (Crude Oil)</td><td class="pos">+185,400</td><td>290,100</td><td>104,700</td><td><div class="bar-container"><span>73%</span><div class="bar"><div class="bar-long" style="width:73%"></div><div class="bar-short" style="width:27%"></div></div></div></td><td class="neg">-210,200</td><td>410,000</td><td>620,200</td><td><div class="bar-container"><span>40%</span><div class="bar"><div class="bar-long" style="width:40%"></div><div class="bar-short" style="width:60%"></div></div></div></td><td class="pos">+24,800</td><td>45,100</td><td>20,300</td><td><div class="bar-container"><span>69%</span><div class="bar"><div class="bar-long" style="width:69%"></div><div class="bar-short" style="width:31%"></div></div></div></td><td>1,650,000</td></tr>
-            <tr><td class="asset-name">GAS (Natural Gas)</td><td class="neg">-65,200</td><td>140,200</td><td>205,400</td><td><div class="bar-container"><span>41%</span><div class="bar"><div class="bar-long" style="width:41%"></div><div class="bar-short" style="width:59%"></div></div></div></td><td class="pos">+78,100</td><td>520,100</td><td>442,000</td><td><div class="bar-container"><span>54%</span><div class="bar"><div class="bar-long" style="width:54%"></div><div class="bar-short" style="width:46%"></div></div></div></td><td class="neg">-12,900</td><td>31,200</td><td>44,100</td><td><div class="bar-container"><span>41%</span><div class="bar"><div class="bar-long" style="width:41%"></div><div class="bar-short" style="width:59%"></div></div></div></td><td>1,210,000</td></tr>
-
-            <!-- AGRICULTURE -->
-            <tr class="category-header"><td colspan="14">▼ AGRICULTURE</td></tr>
-            <tr><td class="asset-name">BLÉ (Wheat)</td><td class="neg">-48,200</td><td>62,100</td><td>110,300</td><td><div class="bar-container"><span>36%</span><div class="bar"><div class="bar-long" style="width:36%"></div><div class="bar-short" style="width:64%"></div></div></div></td><td class="pos">+56,400</td><td>210,200</td><td>153,800</td><td><div class="bar-container"><span>58%</span><div class="bar"><div class="bar-long" style="width:58%"></div><div class="bar-short" style="width:42%"></div></div></div></td><td class="neg">-8,200</td><td>18,400</td><td>26,600</td><td><div class="bar-container"><span>41%</span><div class="bar"><div class="bar-long" style="width:41%"></div><div class="bar-short" style="width:59%"></div></div></div></td><td>385,000</td></tr>
-            <tr><td class="asset-name">CACAO (Cocoa)</td><td class="pos">+15,400</td><td>42,100</td><td>26,700</td><td><div class="bar-container"><span>61%</span><div class="bar"><div class="bar-long" style="width:61%"></div><div class="bar-short" style="width:39%"></div></div></div></td><td class="neg">-21,200</td><td>78,400</td><td>99,600</td><td><div class="bar-container"><span>44%</span><div class="bar"><div class="bar-long" style="width:44%"></div><div class="bar-short" style="width:56%"></div></div></div></td><td class="pos">+5,800</td><td>12,100</td><td>6,300</td><td><div class="bar-container"><span>66%</span><div class="bar"><div class="bar-long" style="width:66%"></div><div class="bar-short" style="width:34%"></div></div></div></td><td>182,000</td></tr>
-            <tr><td class="asset-name">CAFÉ (Arabica)</td><td class="pos">+38,200</td><td>65,400</td><td>27,200</td><td><div class="bar-container"><span>71%</span><div class="bar"><div class="bar-long" style="width:71%"></div><div class="bar-short" style="width:29%"></div></div></div></td><td class="neg">-44,100</td><td>52,100</td><td>96,200</td><td><div class="bar-container"><span>35%</span><div class="bar"><div class="bar-long" style="width:35%"></div><div class="bar-short" style="width:65%"></div></div></div></td><td class="pos">+5,900</td><td>14,200</td><td>8,300</td><td><div class="bar-container"><span>63%</span><div class="bar"><div class="bar-long" style="width:63%"></div><div class="bar-short" style="width:37%"></div></div></div></td><td>215,000</td></tr>
-            <tr><td class="asset-name">COTTON</td><td class="pos">+8,400</td><td>35,100</td><td>26,700</td><td><div class="bar-container"><span>57%</span><div class="bar"><div class="bar-long" style="width:57%"></div><div class="bar-short" style="width:43%"></div></div></div></td><td class="neg">-12,100</td><td>95,400</td><td>107,500</td><td><div class="bar-container"><span>47%</span><div class="bar"><div class="bar-long" style="width:47%"></div><div class="bar-short" style="width:53%"></div></div></div></td><td class="pos">+3,700</td><td>9,800</td><td>6,100</td><td><div class="bar-container"><span>62%</span><div class="bar"><div class="bar-long" style="width:62%"></div><div class="bar-short" style="width:38%"></div></div></div></td><td>195,000</td></tr>
-            <tr><td class="asset-name">JUS D'ORANGE (FCOJ)</td><td class="pos">+3,120</td><td>11,400</td><td>8,280</td><td><div class="bar-container"><span>58%</span><div class="bar"><div class="bar-long" style="width:58%"></div><div class="bar-short" style="width:42%"></div></div></div></td><td class="neg">-4,150</td><td>14,200</td><td>18,350</td><td><div class="bar-container"><span>44%</span><div class="bar"><div class="bar-long" style="width:44%"></div><div class="bar-short" style="width:56%"></div></div></div></td><td class="pos">+1,030</td><td>2,800</td><td>1,770</td><td><div class="bar-container"><span>61%</span><div class="bar"><div class="bar-long" style="width:61%"></div><div class="bar-short" style="width:39%"></div></div></div></td><td>31,450</td></tr>
-            <tr><td class="asset-name">MAÏS (Corn)</td><td class="neg">-125,400</td><td>180,200</td><td>305,600</td><td><div class="bar-container"><span>37%</span><div class="bar"><div class="bar-long" style="width:37%"></div><div class="bar-short" style="width:63%"></div></div></div></td><td class="pos">+142,100</td><td>850,000</td><td>707,900</td><td><div class="bar-container"><span>55%</span><div class="bar"><div class="bar-long" style="width:55%"></div><div class="bar-short" style="width:45%"></div></div></div></td><td class="neg">-16,700</td><td>42,100</td><td>58,800</td><td><div class="bar-container"><span>42%</span><div class="bar"><div class="bar-long" style="width:42%"></div><div class="bar-short" style="width:58%"></div></div></div></td><td>1,420,000</td></tr>
-            <tr><td class="asset-name">SOJA (Soybeans)</td><td class="neg">-82,100</td><td>95,400</td><td>177,500</td><td><div class="bar-container"><span>35%</span><div class="bar"><div class="bar-long" style="width:35%"></div><div class="bar-short" style="width:65%"></div></div></div></td><td class="pos">+95,200</td><td>410,200</td><td>315,000</td><td><div class="bar-container"><span>57%</span><div class="bar"><div class="bar-long" style="width:57%"></div><div class="bar-short" style="width:43%"></div></div></div></td><td class="neg">-13,100</td><td>28,400</td><td>41,500</td><td><div class="bar-container"><span>41%</span><div class="bar"><div class="bar-long" style="width:41%"></div><div class="bar-short" style="width:59%"></div></div></div></td><td>812,000</td></tr>
-            <tr><td class="asset-name">SUCRE (Sugar #11)</td><td class="pos">+45,200</td><td>120,400</td><td>75,200</td><td><div class="bar-container"><span>62%</span><div class="bar"><div class="bar-long" style="width:62%"></div><div class="bar-short" style="width:38%"></div></div></div></td><td class="neg">-52,100</td><td>310,000</td><td>362,100</td><td><div class="bar-container"><span>46%</span><div class="bar"><div class="bar-long" style="width:46%"></div><div class="bar-short" style="width:54%"></div></div></div></td><td class="pos">+6,900</td><td>22,100</td><td>15,200</td><td><div class="bar-container"><span>59%</span><div class="bar"><div class="bar-long" style="width:59%"></div><div class="bar-short" style="width:41%"></div></div></div></td><td>890,000</td></tr>
-
+            <tr class="category-header"><td colspan="7">▼ MÉTAUX</td></tr>
+            <tr>
+                <td class="asset-name">OR (Gold)</td>
+                <td class="pos">+245,120</td>
+                <td>310,400</td>
+                <td class="pos" data-change="long">+5%</td>
+                <td>65,280</td>
+                <td class="neg" data-change="short">-31%</td>
+                <td>512,300</td>
+            </tr>
+            <tr>
+                <td class="asset-name">ARGENT (Silver)</td>
+                <td class="pos">+42,100</td>
+                <td>68,200</td>
+                <td class="pos" data-change="long">+35%</td>
+                <td>26,100</td>
+                <td class="pos" data-change="short">+21%</td>
+                <td>145,200</td>
+            </tr>
         </tbody>
     </table>
 </div>
@@ -151,34 +149,49 @@ html_code = """
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         const rows = document.querySelectorAll("#cotTable tbody tr");
-        const alertsGrid = document.getElementById("alertsGrid");
+        const alertsList = document.getElementById("alertsList");
         let alertsCount = 0;
 
         rows.forEach(row => {
             if (row.classList.contains("category-header")) return;
 
             const assetName = row.cells[0].innerText;
-            const longPercentText = row.cells[4].querySelector("span") ? row.cells[4].querySelector("span").innerText : "50%";
-            const longPercent = parseInt(longPercentText.replace("%", ""));
+            const longChangeCell = row.querySelector('[data-change="long"]');
+            const shortChangeCell = row.querySelector('[data-change="short"]');
 
-            // Détection des extrêmes (> 70% Long ou < 30% Long / donc > 70% Short)
-            if (longPercent >= 70) {
+            if (!longChangeCell || !shortChangeCell) return;
+
+            const longChange = parseFloat(longChangeCell.innerText.replace("%", "").replace("+", ""));
+            const shortChange = parseFloat(shortChangeCell.innerText.replace("%", "").replace("+", ""));
+
+            let details = [];
+
+            if (Math.abs(longChange) >= 20) {
+                const badgeClass = longChange > 0 ? "badge-up" : "badge-down";
+                const sign = longChange > 0 ? "+" : "";
+                details.push(`<span class="badge ${badgeClass}">Longs: ${sign}${longChange}%</span>`);
+            }
+
+            if (Math.abs(shortChange) >= 20) {
+                const badgeClass = shortChange > 0 ? "badge-up" : "badge-down";
+                const sign = shortChange > 0 ? "+" : "";
+                details.push(`<span class="badge ${badgeClass}">Shorts: ${sign}${shortChange}%</span>`);
+            }
+
+            if (details.length > 0) {
                 alertsCount++;
-                const card = document.createElement("div");
-                card.className = "alert-card";
-                card.innerHTML = `<span class="alert-asset">${assetName}</span><span class="alert-badge badge-long">Heavy Long (${longPercent}%)</span>`;
-                alertsGrid.appendChild(card);
-            } else if (longPercent <= 30) {
-                alertsCount++;
-                const card = document.createElement("div");
-                card.className = "alert-card";
-                card.innerHTML = `<span class="alert-asset">${assetName}</span><span class="alert-badge badge-short">Heavy Short (${100 - longPercent}%)</span>`;
-                alertsGrid.appendChild(card);
+                const item = document.createElement("div");
+                item.className = "alert-item";
+                item.innerHTML = `
+                    <span class="alert-asset">${assetName}</span>
+                    <div class="alert-details">${details.join(" ")}</div>
+                `;
+                alertsList.appendChild(item);
             }
         });
 
         if (alertsCount === 0) {
-            alertsGrid.innerHTML = "<span style='color: #8b949e; font-size: 12px;'>Aucun mouvement extrême détecté cette semaine.</span>";
+            alertsList.innerHTML = "<div style='color: #8b949e; font-size: 12px;'>Aucun mouvement supérieur à ±20% sur les Longs ou Shorts cette semaine.</div>";
         }
     });
 </script>
@@ -187,4 +200,4 @@ html_code = """
 </html>
 """
 
-components.html(html_code, height=1600, scrolling=True)
+components.html(html_code, height=1200, scrolling=True)
