@@ -48,8 +48,8 @@ html_code = """
         .alert-col { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
         
         .badge { font-weight: bold; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
-        .badge-up { background-color: rgba(63, 185, 80, 0.15); color: #3fb950; border: 1px solid #238636; }
-        .badge-down { background-color: rgba(248, 81, 73, 0.15); color: #f85149; border: 1px solid #da3633; }
+        .badge-long { background-color: rgba(63, 185, 80, 0.15); color: #3fb950; border: 1px solid #238636; }
+        .badge-short { background-color: rgba(248, 81, 73, 0.15); color: #f85149; border: 1px solid #da3633; }
         .no-change { color: #484f58; font-size: 12px; }
 
         .table-container { overflow-x: auto; background-color: #161b22; border-radius: 6px; border: 1px solid #30363d; }
@@ -265,11 +265,12 @@ html_code = """
             if (hasNcAlert || hasCAlert) {
                 alertsCount++;
 
-                const formatBadge = (val, label) => {
+                const formatBadge = (val, type) => {
                     if (Math.abs(val) < THRESHOLD) return "";
-                    const badgeClass = val > 0 ? "badge-up" : "badge-down";
+                    const isLong = type === "L";
+                    const badgeClass = isLong ? "badge-long" : "badge-short";
                     const sign = val > 0 ? "+" : "";
-                    return `<span class="badge ${badgeClass}">${label}: ${sign}${val}%</span>`;
+                    return `<span class="badge ${badgeClass}">${type}: ${sign}${val}%</span>`;
                 };
 
                 const ncBadges = [formatBadge(valNcL, "L"), formatBadge(valNcS, "S")].filter(Boolean).join(" ");
