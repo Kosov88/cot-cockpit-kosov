@@ -39,10 +39,25 @@ html_code = """
         .title span { color: #58a6ff; }
         .date { font-size: 14px; color: #8b949e; }
         
-        /* Bloc résumé en 3 colonnes */
+        /* Bloc résumé avec le menu déroulant */
         .alerts-container { background-color: #161b22; border-radius: 6px; border: 1px solid #30363d; padding: 15px; margin-bottom: 15px; }
-        .alerts-title { font-size: 14px; font-weight: bold; color: #f2994a; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+        .alerts-header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .alerts-title { font-size: 14px; font-weight: bold; color: #f2994a; text-transform: uppercase; letter-spacing: 0.5px; }
         
+        /* Style du menu déroulant (Select) */
+        .threshold-select {
+            background-color: #0d1117;
+            color: #58a6ff;
+            border: 1px solid #30363d;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            outline: none;
+            cursor: pointer;
+        }
+        .threshold-select:hover { border-color: #58a6ff; }
+
         .alerts-table-header { display: grid; grid-template-columns: 2fr 3fr 3fr; padding: 8px 12px; background-color: #0d1117; border: 1px solid #30363d; border-radius: 4px 4px 0 0; font-size: 11px; font-weight: bold; color: #8b949e; text-transform: uppercase; }
         .alerts-list { display: flex; flex-direction: column; gap: 4px; }
         .alert-item { display: grid; grid-template-columns: 2fr 3fr 3fr; background-color: #0d1117; border: 1px solid #21262d; padding: 8px 12px; align-items: center; font-size: 13px; }
@@ -74,9 +89,27 @@ html_code = """
     <div class="date">Sep 15, 2026</div>
 </div>
 
-<!-- RÉSUMÉ EN LISTE : 3 COLONNES -->
+<!-- RÉSUMÉ EN LISTE AVEC MENU DÉROULANT DE SEUIL -->
 <div class="alerts-container">
-    <div class="alerts-title">⚠️ Mouvements Inhabituels (Changements Longs/Shorts ≥ ±20%)</div>
+    <div class="alerts-header-bar">
+        <div class="alerts-title">⚠️ Mouvements Inhabituels</div>
+        <div>
+            <label for="thresholdSelect" style="font-size: 12px; color: #8b949e; margin-right: 6px;">Seuil d'alerte :</label>
+            <select id="thresholdSelect" class="threshold-select">
+                <option value="10">± 10 %</option>
+                <option value="20" selected>± 20 %</option>
+                <option value="30">± 30 %</option>
+                <option value="40">± 40 %</option>
+                <option value="50">± 50 %</option>
+                <option value="60">± 60 %</option>
+                <option value="70">± 70 %</option>
+                <option value="80">± 80 %</option>
+                <option value="90">± 90 %</option>
+                <option value="100">± 100 %</option>
+                <option value="100.1">> 100 %</option>
+            </select>
+        </div>
+    </div>
     <div class="alerts-table-header">
         <div>Actif</div>
         <div style="color:#58a6ff;">Non-Commercial (Specs)</div>
@@ -182,59 +215,71 @@ html_code = """
     document.addEventListener("DOMContentLoaded", function() {
         const rows = document.querySelectorAll("#cotTable tbody tr");
         const alertsList = document.getElementById("alertsList");
-        let alertsCount = 0;
-        const THRESHOLD = 20;
+        const thresholdSelect = document.getElementById("thresholdSelect");
 
-        rows.forEach(row => {
-            if (row.classList.contains("category-header")) return;
+        function updateAlerts() {
+            alertsList.innerHTML = "";
+            let alertsCount = 0;
+            const threshold = parseFloat(thresholdSelect.value);
 
-            const assetName = row.cells[0].innerText;
-            
-            const ncL = row.querySelector('[data-nc-l]');
-            const ncS = row.querySelector('[data-nc-s]');
-            const cL = row.querySelector('[data-c-l]');
-            const cS = row.querySelector('[data-c-s]');
+            rows.forEach(row => {
+                if (row.classList.contains("category-header")) return;
 
-            if (!ncL || !ncS || !cL || !cS) return;
+                const assetName = row.cells[0].innerText;
+                
+                const ncL = row.querySelector('[data-nc-l]');
+                const ncS = row.querySelector('[data-nc-s]');
+                const cL = row.querySelector('[data-c-l]');
+                const cS = row.querySelector('[data-c-s]');
 
-            const parseVal = (el) => parseFloat(el.innerText.replace("%", "").replace("+", ""));
-            
-            const valNcL = parseVal(ncL);
-            const valNcS = parseVal(ncS);
-            const valCL = parseVal(cL);
-            const valCS = parseVal(cS);
+                if (!ncL || !ncS || !cL || !cS) return;
 
-            const hasNcAlert = Math.abs(valNcL) >= THRESHOLD || Math.abs(valNcS) >= THRESHOLD;
-            const hasCAlert = Math.abs(valCL) >= THRESHOLD || Math.abs(valCS) >= THRESHOLD;
+                const parseVal = (el) => parseFloat(el.innerText.replace("%", "").replace("+", ""));
+                
+                const valNcL = parseVal(ncL);
+                const valNcS = parseVal(ncS);
+                const valCL = parseVal(cL);
+                const valCS = parseVal(cS);
 
-            if (hasNcAlert || hasCAlert) {
-                alertsCount++;
+                const hasNcAlert = Math.abs(valNcL) >= threshold || Math.abs(valNcS) >= threshold;
+                const hasCAlert = Math.abs(valCL) >= threshold || Math.abs(valCS) >= threshold;
 
-                const formatBadge = (val, type) => {
-                    if (Math.abs(val) < THRESHOLD) return "";
-                    const isLong = type === "L";
-                    const badgeClass = isLong ? "badge-long" : "badge-short";
-                    const sign = val > 0 ? "+" : "";
-                    return `<span class="badge ${badgeClass}">${type}: ${sign}${val}%</span>`;
-                };
+                if (hasNcAlert || hasCAlert) {
+                    alertsCount++;
 
-                const ncBadges = [formatBadge(valNcL, "L"), formatBadge(valNcS, "S")].filter(Boolean).join(" ");
-                const cBadges = [formatBadge(valCL, "L"), formatBadge(valCS, "S")].filter(Boolean).join(" ");
+                    const formatBadge = (val, type) => {
+                        if (Math.abs(val) < threshold) return "";
+                        const isLong = type === "L";
+                        const badgeClass = isLong ? "badge-long" : "badge-short";
+                        const sign = val > 0 ? "+" : "";
+                        return `<span class="badge ${badgeClass}">${type}: ${sign}${val}%</span>`;
+                    };
 
-                const item = document.createElement("div");
-                item.className = "alert-item";
-                item.innerHTML = `
-                    <span class="alert-asset">${assetName}</span>
-                    <div class="alert-col">${ncBadges || "<span class='no-change'>-</span>"}</div>
-                    <div class="alert-col">${cBadges || "<span class='no-change'>-</span>"}</div>
-                `;
-                alertsList.appendChild(item);
+                    const ncBadges = [formatBadge(valNcL, "L"), formatBadge(valNcS, "S")].filter(Boolean).join(" ");
+                    const cBadges = [formatBadge(valCL, "L"), formatBadge(valCS, "S")].filter(Boolean).join(" ");
+
+                    const item = document.createElement("div");
+                    item.className = "alert-item";
+                    item.innerHTML = `
+                        <span class="alert-asset">${assetName}</span>
+                        <div class="alert-col">${ncBadges || "<span class='no-change'>-</span>"}</div>
+                        <div class="alert-col">${cBadges || "<span class='no-change'>-</span>"}</div>
+                    `;
+                    alertsList.appendChild(item);
+                }
+            });
+
+            if (alertsCount === 0) {
+                const labelText = threshold > 100 ? "supérieur à +100%" : `supérieur à ±${threshold}%`;
+                alertsList.innerHTML = `<div style='color: #8b949e; font-size: 12px; padding: 10px; background-color: #0d1117; text-align: center;'>Aucun mouvement ${labelText} cette semaine.</div>`;
             }
-        });
-
-        if (alertsCount === 0) {
-            alertsList.innerHTML = "<div style='color: #8b949e; font-size: 12px; padding: 10px; background-color: #0d1117; text-align: center;'>Aucun mouvement supérieur à ±20% cette semaine.</div>";
         }
+
+        // Écouter le changement de valeur dans le menu déroulant
+        thresholdSelect.addEventListener("change", updateAlerts);
+
+        // Lancement initial
+        updateAlerts();
     });
 </script>
 
