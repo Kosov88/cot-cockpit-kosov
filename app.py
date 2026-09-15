@@ -30,10 +30,22 @@ html_code = """
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         body { background-color: #0e1117; color: #e0e0e0; padding: 10px; }
+        
         .header { display: flex; justify-content: space-between; align-items: center; background-color: #161b22; padding: 15px 20px; border-radius: 6px; margin-bottom: 15px; border: 1px solid #30363d; }
         .title { font-size: 20px; font-weight: bold; color: #ffffff; }
         .title span { color: #58a6ff; }
         .date { font-size: 14px; color: #8b949e; }
+        
+        /* Styles pour le bloc de résumé */
+        .alerts-container { background-color: #161b22; border-radius: 6px; border: 1px solid #30363d; padding: 15px; margin-bottom: 15px; }
+        .alerts-title { font-size: 14px; font-weight: bold; color: #f2994a; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+        .alerts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+        .alert-card { background-color: #0d1117; border: 1px solid #30363d; border-radius: 4px; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; }
+        .alert-asset { font-weight: bold; color: #f0f6fc; font-size: 13px; }
+        .alert-badge { font-weight: bold; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
+        .badge-long { background-color: rgba(63, 185, 80, 0.15); color: #3fb950; border: 1px solid #238636; }
+        .badge-short { background-color: rgba(248, 81, 73, 0.15); color: #f85149; border: 1px solid #da3633; }
+
         .table-container { overflow-x: auto; background-color: #161b22; border-radius: 6px; border: 1px solid #30363d; }
         table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: right; }
         th, td { padding: 8px 10px; border-bottom: 1px solid #21262d; white-space: nowrap; }
@@ -56,8 +68,16 @@ html_code = """
     <div class="date">Sep 15, 2026</div>
 </div>
 
+<!-- SECTION MOUVEMENTS INHABITUELS -->
+<div class="alerts-container">
+    <div class="alerts-title">⚠️ Mouvements Inhabituels (Ajustements > 20%)</div>
+    <div class="alerts-grid" id="alertsGrid">
+        <!-- Les cartes seront générées dynamiquement par JavaScript -->
+    </div>
+</div>
+
 <div class="table-container">
-    <table>
+    <table id="cotTable">
         <thead>
             <tr>
                 <th style="text-align:left;">CONTRACTS</th>
@@ -128,8 +148,43 @@ html_code = """
     </table>
 </div>
 
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const rows = document.querySelectorAll("#cotTable tbody tr");
+        const alertsGrid = document.getElementById("alertsGrid");
+        let alertsCount = 0;
+
+        rows.forEach(row => {
+            if (row.classList.contains("category-header")) return;
+
+            const assetName = row.cells[0].innerText;
+            const longPercentText = row.cells[4].querySelector("span") ? row.cells[4].querySelector("span").innerText : "50%";
+            const longPercent = parseInt(longPercentText.replace("%", ""));
+
+            // Détection des extrêmes (> 70% Long ou < 30% Long / donc > 70% Short)
+            if (longPercent >= 70) {
+                alertsCount++;
+                const card = document.createElement("div");
+                card.className = "alert-card";
+                card.innerHTML = `<span class="alert-asset">${assetName}</span><span class="alert-badge badge-long">Heavy Long (${longPercent}%)</span>`;
+                alertsGrid.appendChild(card);
+            } else if (longPercent <= 30) {
+                alertsCount++;
+                const card = document.createElement("div");
+                card.className = "alert-card";
+                card.innerHTML = `<span class="alert-asset">${assetName}</span><span class="alert-badge badge-short">Heavy Short (${100 - longPercent}%)</span>`;
+                alertsGrid.appendChild(card);
+            }
+        });
+
+        if (alertsCount === 0) {
+            alertsGrid.innerHTML = "<span style='color: #8b949e; font-size: 12px;'>Aucun mouvement extrême détecté cette semaine.</span>";
+        }
+    });
+</script>
+
 </body>
 </html>
 """
 
-components.html(html_code, height=1450, scrolling=True)
+components.html(html_code, height=1600, scrolling=True)
