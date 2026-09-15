@@ -175,7 +175,7 @@ html_code = """
             <!-- CRYPTO -->
             <tr class="category-header"><td colspan="10">▼ CRYPTO</td></tr>
             <tr><td class="asset-name">BTC</td><td>18,400</td><td class="pos" data-nc-l="+28.4%">+28.4%</td><td>12,100</td><td class="neg" data-nc-s="-5.2%">-5.2%</td><td>32,400</td><td class="neg" data-c-l="-10.1%">-10.1%</td><td>38,900</td><td class="pos" data-c-s="+22.1%">+22.1%</td><td>78,500</td></tr>
-            <tr><td class="asset-name">ETH</td><td>11,200</td><td class="pos" data-nc-l="+4.2%">+4.2%</td><td>9,800</td><td class="pos" data-nc-s="+31.5%">+31.5%</td><td>24,100</td><td class="neg" data-c-l="-14.2%">-14.2%</td><td>25,400</td><td class="neg" data-c-s="-2.1%">-2.1%</td><td>54,000</td></tr>
+            <tr><td class="asset-name">ETH</td><td>11,200</td><td class="pos" data-nc-l="+4.2%">+4.2%</td><td>9,800</td><td class="neg" data-nc-s="-3.1%">-3.1%</td><td>24,100</td><td class="neg" data-c-l="-14.2%">-14.2%</td><td>25,400</td><td class="neg" data-c-s="-2.1%">-2.1%</td><td>54,000</td></tr>
             <tr><td class="asset-name">SOL</td><td>6,500</td><td class="neg" data-nc-l="-1.8%">-1.8%</td><td>5,200</td><td class="pos" data-nc-s="+2.4%">+2.4%</td><td>12,800</td><td class="pos" data-c-l="+3.1%">+3.1%</td><td>14,100</td><td class="pos" data-c-s="+1.9%">+1.9%</td><td>31,000</td></tr>
 
             <!-- MÉTAUX -->
