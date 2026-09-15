@@ -66,13 +66,13 @@ html_code = """
 <body>
 
 <div class="header">
-    <div class="title">COT REPORT <span>• FUSION MARKETS ASSETS</span></div>
+    <div class="title">COT REPORT <span>• MAJOR CURRENCIES</span></div>
     <div class="date">Sep 15, 2026</div>
 </div>
 
 <!-- RÉSUMÉ EN LISTE : 3 COLONNES -->
 <div class="alerts-container">
-    <div class="alerts-title">⚠️ Mouvements Inhabituels (Changements ≥ ±15%)</div>
+    <div class="alerts-title">⚠️ Mouvements Inhabituels (Changements Longs/Shorts ≥ ±15%)</div>
     <div class="alerts-table-header">
         <div>Actif</div>
         <div style="color:#58a6ff;">Non-Commercial (Specs)</div>
@@ -106,44 +106,102 @@ html_code = """
             </tr>
         </thead>
         <tbody>
-            <tr class="category-header"><td colspan="10">▼ DEVISES</td></tr>
+            <tr class="category-header"><td colspan="10">▼ MAJOR CURRENCIES</td></tr>
             <tr>
-                <td class="asset-name">US Dollar Index (DXY)</td>
-                <td>28,407</td>
-                <td class="pos" data-nc-l="+18%">+18%</td>
-                <td>10,803</td>
-                <td class="neg" data-nc-s="-5%">-5%</td>
-                <td>18,620</td>
-                <td class="neg" data-c-l="-2%">-2%</td>
-                <td>37,808</td>
-                <td class="pos" data-c-s="+16%">+16%</td>
-                <td>57,858</td>
+                <td class="asset-name">NEW ZEALAND DOLLAR</td>
+                <td>26,110</td>
+                <td class="pos" data-nc-l="+131.1%">+131.1%</td>
+                <td>19,878</td>
+                <td class="pos" data-nc-s="+2.9%">+2.9%</td>
+                <td>87,479</td>
+                <td class="neg" data-c-l="-2.8%">-2.8%</td>
+                <td>93,114</td>
+                <td class="pos" data-c-s="+14.3%">+14.3%</td>
+                <td>125,978</td>
             </tr>
             <tr>
-                <td class="asset-name">EUR</td>
+                <td class="asset-name">BRITISH POUND STERLING</td>
+                <td>73,520</td>
+                <td class="neg" data-nc-l="-13.9%">-13.9%</td>
+                <td>132,356</td>
+                <td class="neg" data-nc-s="-1.9%">-1.9%</td>
+                <td>205,647</td>
+                <td class="pos" data-c-l="+5.2%">+5.2%</td>
+                <td>148,545</td>
+                <td class="neg" data-c-s="-0.7%">-0.7%</td>
+                <td>318,608</td>
+            </tr>
+            <tr>
+                <td class="asset-name">SWISS FRANC</td>
+                <td>17,273</td>
+                <td class="neg" data-nc-l="-13.3%">-13.3%</td>
+                <td>47,258</td>
+                <td class="pos" data-nc-s="+10.4%">+10.4%</td>
+                <td>112,612</td>
+                <td class="pos" data-c-l="+27.6%">+27.6%</td>
+                <td>71,108</td>
+                <td class="pos" data-c-s="+36.3%">+36.3%</td>
+                <td>153,683</td>
+            </tr>
+            <tr>
+                <td class="asset-name">JAPANESE YEN</td>
+                <td>178,791</td>
+                <td class="pos" data-nc-l="+52.6%">+52.6%</td>
+                <td>167,995</td>
+                <td class="neg" data-nc-s="-19.8%">-19.8%</td>
+                <td>249,469</td>
+                <td class="pos" data-c-l="+10.8%">+10.8%</td>
+                <td>263,510</td>
+                <td class="pos" data-c-s="+106.5%">+106.5%</td>
+                <td>499,635</td>
+            </tr>
+            <tr>
+                <td class="asset-name">CANADIAN DOLLAR</td>
+                <td>54,444</td>
+                <td class="pos" data-nc-l="+50.1%">+50.1%</td>
+                <td>124,943</td>
+                <td class="neg" data-nc-s="-13.5%">-13.5%</td>
+                <td>244,052</td>
+                <td class="neg" data-c-l="-8.6%">-8.6%</td>
+                <td>169,623</td>
+                <td class="pos" data-c-s="+11.9%">+11.9%</td>
+                <td>334,861</td>
+            </tr>
+            <tr>
+                <td class="asset-name">AUSTRALIAN DOLLAR</td>
+                <td>120,532</td>
+                <td class="pos" data-nc-l="+5.6%">+5.6%</td>
+                <td>155,402</td>
+                <td class="pos" data-nc-s="+1.2%">+1.2%</td>
+                <td>271,564</td>
+                <td class="pos" data-c-l="+15.5%">+15.5%</td>
+                <td>255,880</td>
+                <td class="pos" data-c-s="+18.3%">+18.3%</td>
+                <td>455,468</td>
+            </tr>
+            <tr>
+                <td class="asset-name">EURO FX</td>
                 <td>198,509</td>
-                <td class="neg" data-nc-l="-3%">-3%</td>
+                <td class="neg" data-nc-l="-2.4%">-2.4%</td>
                 <td>241,125</td>
-                <td class="pos" data-nc-s="+22%">+22%</td>
+                <td class="pos" data-nc-s="+5.6%">+5.6%</td>
                 <td>593,162</td>
-                <td class="pos" data-c-l="+1%">+1%</td>
+                <td class="pos" data-c-l="+11.1%">+11.1%</td>
                 <td>586,432</td>
-                <td class="neg" data-c-s="-18%">-18%</td>
+                <td class="pos" data-c-s="+8.1%">+8.1%</td>
                 <td>942,464</td>
             </tr>
-
-            <tr class="category-header"><td colspan="10">▼ MÉTAUX</td></tr>
             <tr>
-                <td class="asset-name">OR (Gold)</td>
-                <td>310,400</td>
-                <td class="pos" data-nc-l="+5%">+5%</td>
-                <td>65,280</td>
-                <td class="neg" data-nc-s="-25%">-25%</td>
-                <td>82,100</td>
-                <td class="neg" data-c-l="-16%">-16%</td>
-                <td>362,200</td>
-                <td class="pos" data-c-s="+8%">+8%</td>
-                <td>512,300</td>
+                <td class="asset-name">U.S. DOLLAR INDEX</td>
+                <td>28,407</td>
+                <td class="pos" data-nc-l="+0.6%">+0.6%</td>
+                <td>10,803</td>
+                <td class="neg" data-nc-s="-3.7%">-3.7%</td>
+                <td>18,620</td>
+                <td class="pos" data-c-l="+14.2%">+14.2%</td>
+                <td>37,808</td>
+                <td class="pos" data-c-s="+7.9%">+7.9%</td>
+                <td>57,858</td>
             </tr>
         </tbody>
     </table>
