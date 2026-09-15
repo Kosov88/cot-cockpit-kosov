@@ -36,18 +36,21 @@ html_code = """
         .title span { color: #58a6ff; }
         .date { font-size: 14px; color: #8b949e; }
         
-        /* Bloc résumé en liste verticale */
+        /* Bloc résumé en 3 colonnes */
         .alerts-container { background-color: #161b22; border-radius: 6px; border: 1px solid #30363d; padding: 15px; margin-bottom: 15px; }
         .alerts-title { font-size: 14px; font-weight: bold; color: #f2994a; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
         
-        .alerts-list { display: flex; flex-direction: column; gap: 8px; }
-        .alert-item { background-color: #0d1117; border: 1px solid #30363d; border-radius: 4px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; }
+        .alerts-table-header { display: grid; grid-template-columns: 2fr 3fr 3fr; padding: 8px 12px; background-color: #0d1117; border: 1px solid #30363d; border-radius: 4px 4px 0 0; font-size: 11px; font-weight: bold; color: #8b949e; text-transform: uppercase; }
+        .alerts-list { display: flex; flex-direction: column; gap: 4px; }
+        .alert-item { display: grid; grid-template-columns: 2fr 3fr 3fr; background-color: #0d1117; border: 1px solid #21262d; padding: 8px 12px; align-items: center; font-size: 13px; }
+        .alert-item:last-child { border-radius: 0 0 4px 4px; }
         .alert-asset { font-weight: bold; color: #f0f6fc; }
-        .alert-details { display: flex; gap: 10px; align-items: center; }
+        .alert-col { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
         
-        .badge { font-weight: bold; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+        .badge { font-weight: bold; padding: 2px 6px; border-radius: 4px; font-size: 11px; }
         .badge-up { background-color: rgba(63, 185, 80, 0.15); color: #3fb950; border: 1px solid #238636; }
         .badge-down { background-color: rgba(248, 81, 73, 0.15); color: #f85149; border: 1px solid #da3633; }
+        .no-change { color: #484f58; font-size: 12px; }
 
         .table-container { overflow-x: auto; background-color: #161b22; border-radius: 6px; border: 1px solid #30363d; }
         table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: right; }
@@ -67,11 +70,16 @@ html_code = """
     <div class="date">Sep 15, 2026</div>
 </div>
 
-<!-- RÉSUMÉ EN LISTE DES MOUVEMENTS INHABITUELS -->
+<!-- RÉSUMÉ EN LISTE : 3 COLONNES -->
 <div class="alerts-container">
-    <div class="alerts-title">⚠️ Mouvements Inhabituels (Change in Longs/Shorts ≥ ±20%)</div>
+    <div class="alerts-title">⚠️ Mouvements Inhabituels (Changements ≥ ±15%)</div>
+    <div class="alerts-table-header">
+        <div>Actif</div>
+        <div style="color:#58a6ff;">Non-Commercial (Specs)</div>
+        <div style="color:#3fb950;">Commercial (Hedgers)</div>
+    </div>
     <div class="alerts-list" id="alertsList">
-        <!-- Généré dynamiquement en liste -->
+        <!-- Généré dynamiquement -->
     </div>
 </div>
 
@@ -80,67 +88,62 @@ html_code = """
         <thead>
             <tr>
                 <th style="text-align:left;">CONTRACTS</th>
-                <th colspan="5" style="text-align:center; color:#58a6ff;">NON-COMMERCIAL (Large Specs)</th>
+                <th colspan="4" style="text-align:center; color:#58a6ff;">NON-COMMERCIAL</th>
+                <th colspan="4" style="text-align:center; color:#3fb950;">COMMERCIAL</th>
                 <th>OPEN INTEREST</th>
             </tr>
             <tr>
                 <th style="text-align:left;">Asset</th>
-                <th>Net Pos</th>
                 <th>Long</th>
-                <th>Δ Long (%)</th>
+                <th>Δ L (%)</th>
                 <th>Short</th>
-                <th>Δ Short (%)</th>
+                <th>Δ S (%)</th>
+                <th>Long</th>
+                <th>Δ L (%)</th>
+                <th>Short</th>
+                <th>Δ S (%)</th>
                 <th>Total</th>
             </tr>
         </thead>
         <tbody>
-            <tr class="category-header"><td colspan="7">▼ DEVISES</td></tr>
+            <tr class="category-header"><td colspan="10">▼ DEVISES</td></tr>
             <tr>
                 <td class="asset-name">US Dollar Index (DXY)</td>
-                <td class="pos">+17,604</td>
                 <td>28,407</td>
-                <td class="pos" data-change="long">+24%</td>
+                <td class="pos" data-nc-l="+18%">+18%</td>
                 <td>10,803</td>
-                <td class="neg" data-change="short">-5%</td>
+                <td class="neg" data-nc-s="-5%">-5%</td>
+                <td>18,620</td>
+                <td class="neg" data-c-l="-2%">-2%</td>
+                <td>37,808</td>
+                <td class="pos" data-c-s="+16%">+16%</td>
                 <td>57,858</td>
             </tr>
             <tr>
                 <td class="asset-name">EUR</td>
-                <td class="neg">-42,616</td>
                 <td>198,509</td>
-                <td class="neg" data-change="long">-3%</td>
+                <td class="neg" data-nc-l="-3%">-3%</td>
                 <td>241,125</td>
-                <td class="pos" data-change="short">+28%</td>
+                <td class="pos" data-nc-s="+22%">+22%</td>
+                <td>593,162</td>
+                <td class="pos" data-c-l="+1%">+1%</td>
+                <td>586,432</td>
+                <td class="neg" data-c-s="-18%">-18%</td>
                 <td>942,464</td>
             </tr>
-            <tr>
-                <td class="asset-name">GBP</td>
-                <td class="neg">-58,836</td>
-                <td>73,520</td>
-                <td class="neg" data-change="long">-22%</td>
-                <td>132,356</td>
-                <td class="pos" data-change="short">+12%</td>
-                <td>318,608</td>
-            </tr>
 
-            <tr class="category-header"><td colspan="7">▼ MÉTAUX</td></tr>
+            <tr class="category-header"><td colspan="10">▼ MÉTAUX</td></tr>
             <tr>
                 <td class="asset-name">OR (Gold)</td>
-                <td class="pos">+245,120</td>
                 <td>310,400</td>
-                <td class="pos" data-change="long">+5%</td>
+                <td class="pos" data-nc-l="+5%">+5%</td>
                 <td>65,280</td>
-                <td class="neg" data-change="short">-31%</td>
+                <td class="neg" data-nc-s="-25%">-25%</td>
+                <td>82,100</td>
+                <td class="neg" data-c-l="-16%">-16%</td>
+                <td>362,200</td>
+                <td class="pos" data-c-s="+8%">+8%</td>
                 <td>512,300</td>
-            </tr>
-            <tr>
-                <td class="asset-name">ARGENT (Silver)</td>
-                <td class="pos">+42,100</td>
-                <td>68,200</td>
-                <td class="pos" data-change="long">+35%</td>
-                <td>26,100</td>
-                <td class="pos" data-change="short">+21%</td>
-                <td>145,200</td>
             </tr>
         </tbody>
     </table>
@@ -151,47 +154,56 @@ html_code = """
         const rows = document.querySelectorAll("#cotTable tbody tr");
         const alertsList = document.getElementById("alertsList");
         let alertsCount = 0;
+        const THRESHOLD = 15;
 
         rows.forEach(row => {
             if (row.classList.contains("category-header")) return;
 
             const assetName = row.cells[0].innerText;
-            const longChangeCell = row.querySelector('[data-change="long"]');
-            const shortChangeCell = row.querySelector('[data-change="short"]');
+            
+            const ncL = row.querySelector('[data-nc-l]');
+            const ncS = row.querySelector('[data-nc-s]');
+            const cL = row.querySelector('[data-c-l]');
+            const cS = row.querySelector('[data-c-s]');
 
-            if (!longChangeCell || !shortChangeCell) return;
+            if (!ncL || !ncS || !cL || !cS) return;
 
-            const longChange = parseFloat(longChangeCell.innerText.replace("%", "").replace("+", ""));
-            const shortChange = parseFloat(shortChangeCell.innerText.replace("%", "").replace("+", ""));
+            const parseVal = (el) => parseFloat(el.innerText.replace("%", "").replace("+", ""));
+            
+            const valNcL = parseVal(ncL);
+            const valNcS = parseVal(ncS);
+            const valCL = parseVal(cL);
+            const valCS = parseVal(cS);
 
-            let details = [];
+            const hasNcAlert = Math.abs(valNcL) >= THRESHOLD || Math.abs(valNcS) >= THRESHOLD;
+            const hasCAlert = Math.abs(valCL) >= THRESHOLD || Math.abs(valCS) >= THRESHOLD;
 
-            if (Math.abs(longChange) >= 20) {
-                const badgeClass = longChange > 0 ? "badge-up" : "badge-down";
-                const sign = longChange > 0 ? "+" : "";
-                details.push(`<span class="badge ${badgeClass}">Longs: ${sign}${longChange}%</span>`);
-            }
-
-            if (Math.abs(shortChange) >= 20) {
-                const badgeClass = shortChange > 0 ? "badge-up" : "badge-down";
-                const sign = shortChange > 0 ? "+" : "";
-                details.push(`<span class="badge ${badgeClass}">Shorts: ${sign}${shortChange}%</span>`);
-            }
-
-            if (details.length > 0) {
+            if (hasNcAlert || hasCAlert) {
                 alertsCount++;
+
+                const formatBadge = (val, label) => {
+                    if (Math.abs(val) < THRESHOLD) return "";
+                    const badgeClass = val > 0 ? "badge-up" : "badge-down";
+                    const sign = val > 0 ? "+" : "";
+                    return `<span class="badge ${badgeClass}">${label}: ${sign}${val}%</span>`;
+                };
+
+                const ncBadges = [formatBadge(valNcL, "L"), formatBadge(valNcS, "S")].filter(Boolean).join(" ");
+                const cBadges = [formatBadge(valCL, "L"), formatBadge(valCS, "S")].filter(Boolean).join(" ");
+
                 const item = document.createElement("div");
                 item.className = "alert-item";
                 item.innerHTML = `
                     <span class="alert-asset">${assetName}</span>
-                    <div class="alert-details">${details.join(" ")}</div>
+                    <div class="alert-col">${ncBadges || "<span class='no-change'>-</span>"}</div>
+                    <div class="alert-col">${cBadges || "<span class='no-change'>-</span>"}</div>
                 `;
                 alertsList.appendChild(item);
             }
         });
 
         if (alertsCount === 0) {
-            alertsList.innerHTML = "<div style='color: #8b949e; font-size: 12px;'>Aucun mouvement supérieur à ±20% sur les Longs ou Shorts cette semaine.</div>";
+            alertsList.innerHTML = "<div style='color: #8b949e; font-size: 12px; padding: 10px; background-color: #0d1117; text-align: center;'>Aucun mouvement supérieur à ±15% cette semaine.</div>";
         }
     });
 </script>
